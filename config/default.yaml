@@ -1,0 +1,22 @@
+application:
+  name: boxster-tracker
+  version: 0.1.0
+
+storage:
+  root: data
+
+database:
+  filename: boxsters.db
+
+directories:
+  photos: photos
+  history: history
+
+output:
+  root: output
+  reports: reports
+  exports: exports
+
+logging:
+  level: INFO
+
