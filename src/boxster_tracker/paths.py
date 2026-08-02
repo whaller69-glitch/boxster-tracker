@@ -28,7 +28,9 @@ class AppPaths:
             output
             / config["output"]["exports"]
         )
-
+    @property
+    def database(self) -> Path:
+        return self.root / "boxsters.db"
     def create(self) -> None:
         """Create required directories."""
 
@@ -40,3 +42,4 @@ class AppPaths:
             self.exports,
         ]:
             path.mkdir(parents=True, exist_ok=True)
+
