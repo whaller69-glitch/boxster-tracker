@@ -1,0 +1,43 @@
+[project]
+name = "boxster-tracker"
+version = "0.1.0"
+description = "A Porsche Boxster market tracking and comparison tool"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+
+dependencies = [
+    "typer>=0.12.0",
+    "pyyaml>=6.0",
+    "sqlalchemy>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+    "pre-commit>=3.7",
+]
+
+[project.scripts]
+boxster = "boxster_tracker.cli:app"
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/boxster_tracker"]
+
+
