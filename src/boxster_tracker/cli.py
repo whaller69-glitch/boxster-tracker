@@ -1,9 +1,10 @@
 import typer
 
 from boxster_tracker import __version__
-from boxster_tracker.config import load_config
 from boxster_tracker.paths import AppPaths
-
+from boxster_tracker.config import load_config
+from boxster_tracker.database import get_session
+from boxster_tracker.import_service import ImportService
 
 app = typer.Typer(
     name="boxster",
@@ -50,4 +51,33 @@ def status():
 
 if __name__ == "__main__":
     app()
+
+@app.command()
+def import_url(
+    url: str,
+):
+    """
+    Import a vehicle listing URL.
+    """
+
+    config = load_config()
+
+    paths = AppPaths(config)
+
+    paths.create()
+
+    session = get_session(
+        paths.database
+    )
+
+    service = ImportService(session)
+
+    listing = (
+        service
+        .import_autotrader_url(url)
+    )
+
+    typer.echo(
+        f"Imported listing #{listing.id}"
+    )
 

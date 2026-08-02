@@ -9,10 +9,6 @@ class Base(DeclarativeBase):
 
 
 def create_database(db_path: Path):
-    """
-    Create database engine and tables.
-    """
-
     engine = create_engine(
         f"sqlite:///{db_path}",
         echo=False,
@@ -29,4 +25,12 @@ def create_session_factory(engine):
         autoflush=False,
         autocommit=False,
     )
+
+
+def get_session(db_path: Path):
+    engine = create_database(db_path)
+
+    factory = create_session_factory(engine)
+
+    return factory()
 
