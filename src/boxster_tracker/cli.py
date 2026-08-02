@@ -1,7 +1,9 @@
-
 import typer
 
 from boxster_tracker import __version__
+from boxster_tracker.config import load_config
+from boxster_tracker.paths import AppPaths
+
 
 app = typer.Typer(
     name="boxster",
@@ -17,15 +19,35 @@ def version():
 
 @app.command()
 def init():
-    """Initialize Boxster Tracker."""
+    """Initialize Boxster Tracker workspace."""
+
+    config = load_config()
+    paths = AppPaths(config)
+
+    paths.create()
+
     typer.echo("Boxster Tracker initialized")
+    typer.echo("")
+    typer.echo("Created:")
+    typer.echo(f"  {paths.root}")
+    typer.echo(f"  {paths.photos}")
+    typer.echo(f"  {paths.history}")
+    typer.echo(f"  {paths.reports}")
+    typer.echo(f"  {paths.exports}")
 
 
 @app.command()
 def status():
     """Show application status."""
-    typer.echo("Status command not implemented yet")
+
+    config = load_config()
+
+    typer.echo("Configuration loaded")
+    typer.echo(
+        f"Application: {config['application']['name']}"
+    )
 
 
 if __name__ == "__main__":
     app()
+
