@@ -1,7 +1,7 @@
 import typer
 from rich.console import Console
 from rich.table import Table
-
+from boxster_tracker.services.listing import ListingService
 from boxster_tracker import __version__
 from boxster_tracker.config import load_config
 from boxster_tracker.database import get_session
@@ -56,7 +56,50 @@ def status():
     typer.echo(
         f"Application: {config['application']['name']}"
     )
+@app.command()
+def list(
+    year: int | None = typer.Option(
+        None,
+        help="Filter by model year",
+    ),
+    max_price: float | None = typer.Option(
+        None,
+        help="Maximum price",
+    ),
+    max_km: int | None = typer.Option(
+        None,
+        help="Maximum mileage",
+    ),
+):
+    """
+    List tracked Boxster listings.
+    """
 
+    config = load_config()
+
+    paths = AppPaths(config)
+
+    session = get_session(
+        paths.database
+    )
+
+    service = ListingService(session)
+
+    listings = service.search(
+        year=year,
+        max_price=max_price,
+        max_mileage=max_km,
+    )
+
+    for listing in listings:
+        typer.echo(
+            f"{listing.id}: "
+            f"{listing.year} "
+            f"{listing.make} "
+            f"{listing.model} "
+            f"${listing.price} "
+            f"{listing.mileage} km"
+        )
 
 @app.command()
 def import_url(url: str):
@@ -142,9 +185,12 @@ def capture_url(url: str):
         f"Saved page: {output}"
     )
 
-
 @app.command(name="list")
-def list_listings():
+def list_listings(
+    year: int | None = None,
+    max_price: float | None = None,
+    max_km: int | None = None,
+):
     """
     Display stored listings.
     """
