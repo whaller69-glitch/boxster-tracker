@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -9,6 +10,7 @@ class ListingData:
     year: int | None = None
     make: str | None = None
     model: str | None = None
+    trim: str | None = None
 
     price: float | None = None
     mileage: int | None = None
@@ -16,3 +18,6 @@ class ListingData:
     colour: str | None = None
     transmission: str | None = None
 
+    seller: str | None = None
+    location: str | None = None
+    captured_at: datetime | None = None
