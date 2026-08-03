@@ -1,5 +1,6 @@
 import typer
 
+from boxster_tracker.services import ListingService
 from boxster_tracker import __version__
 from boxster_tracker.config import load_config
 from boxster_tracker.database import get_session
@@ -12,7 +13,30 @@ app = typer.Typer(
     name="boxster",
     help="Porsche Boxster market tracking tool",
 )
+@app.command()
+def list():
+    """
+    Show imported listings.
+    """
 
+    config = load_config()
+    paths = AppPaths(config)
+
+    session = get_session(paths.database)
+
+    service = ListingService(session)
+
+    listings = service.get_all()
+
+    for listing in listings:
+        typer.echo(
+            f"{listing.id}: "
+            f"{listing.year} "
+            f"{listing.make} "
+            f"{listing.model} "
+            f"${listing.price} "
+            f"{listing.mileage} km"
+        )
 
 @app.command()
 def version():

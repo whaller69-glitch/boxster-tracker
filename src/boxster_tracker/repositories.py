@@ -9,6 +9,14 @@ class ListingRepository:
     def __init__(self, session: Session):
         self.session = session
 
+    def all(self):
+       return (
+          self.session
+          .query(Listing)
+          .order_by(Listing.created_at.desc())
+          .all()
+      )
+
     def create(
         self,
         data: ListingData,
