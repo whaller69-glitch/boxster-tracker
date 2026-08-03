@@ -1,7 +1,7 @@
 import re
 
 from boxster_tracker.schemas import ListingData
-
+from boxster_tracker.normalization import normalize_transmission
 from .jsonld import extract_jsonld
 from .autotrader_state import extract_vehicle_state
 
@@ -74,7 +74,7 @@ class AutoTraderParser:
                 "mileage"
             ),
 
-            transmission=state.get(
-                "transmission"
+            transmission=normalize_transmission(
+                state.get("transmission")
             ),
         )

@@ -5,6 +5,7 @@ from boxster_tracker.paths import AppPaths
 from boxster_tracker.config import load_config
 from boxster_tracker.database import get_session
 from boxster_tracker.import_service import ImportService
+from boxster_tracker.scrapers.capture import PageCapture
 
 app = typer.Typer(
     name="boxster",
@@ -79,5 +80,30 @@ def import_url(
 
     typer.echo(
         f"Imported listing #{listing.id}"
+    )
+
+@app.command()
+def capture_url(
+    url: str,
+):
+    """
+    Capture an AutoTrader page.
+    """
+
+    config = load_config()
+
+    paths = AppPaths(config)
+
+    capture = PageCapture(
+        paths.pages
+    )
+
+    output = capture.capture(
+        url,
+        "capture.html",
+    )
+
+    typer.echo(
+        f"Saved page: {output}"
     )
 

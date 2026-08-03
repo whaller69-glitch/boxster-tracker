@@ -5,20 +5,19 @@ from boxster_tracker.parsers.autotrader import (
 )
 
 
-def test_parse_autotrader_fixture():
+def test_parse_real_autotrader_fixture():
 
     html = Path(
-        "tests/fixtures/autotrader_boxster.html"
+        "tests/fixtures/autotrader_real.html"
     ).read_text()
 
-    parser = AutoTraderParser()
-
-    listing = parser.parse(
+    listing = AutoTraderParser().parse(
         html,
-        "https://example.com",
+        "https://autotrader.ca/test",
     )
 
-    assert listing.year == 2007
-    assert listing.price == 29995
-    assert listing.mileage == 45000
-
+    assert listing.make == "Porsche"
+    assert listing.model == "Boxster"
+    assert listing.price == 15598
+    assert listing.mileage == 104898
+    assert listing.colour == "Red"

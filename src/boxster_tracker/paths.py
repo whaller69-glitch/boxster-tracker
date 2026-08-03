@@ -29,6 +29,8 @@ class AppPaths:
             / config["output"]["exports"]
         )
     @property
+    def pages(self) -> Path:
+        return self.root / "history" / "pages"
     def database(self) -> Path:
         return self.root / "boxsters.db"
     def create(self) -> None:
