@@ -1,12 +1,11 @@
-from datetime import datetime
+from datetime import datetime, UTC
 
 from sqlalchemy import (
     DateTime,
     Float,
+    ForeignKey,
     Integer,
     String,
-    Text,
-    ForeignKey,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,15 +20,68 @@ class Listing(Base):
         primary_key=True,
     )
 
-    source: Mapped[str] = mapped_column(String(50))
-    url: Mapped[str] = mapped_column(String(500))
+    source: Mapped[str] = mapped_column(
+        String(50)
+    )
 
-    year: Mapped[int | None]
-    make: Mapped[str | None]
-    model: Mapped[str | None]
+    url: Mapped[str] = mapped_column(
+        String(500)
+    )
 
-    price: Mapped[float | None]
-    mileage: Mapped[int | None]
+    year: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    make: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    model: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    trim: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    price: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    mileage: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    colour: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+    transmission: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+    seller: Mapped[str | None] = mapped_column(
+        String(200),
+        nullable=True,
+    )
+
+    location: Mapped[str | None] = mapped_column(
+        String(200),
+        nullable=True,
+    )
+
+    captured_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(UTC),
+    )
 
     status: Mapped[str] = mapped_column(
         String(50),
@@ -38,7 +90,7 @@ class Listing(Base):
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.utcnow,
+        default=lambda: datetime.now(UTC),
     )
 
 
@@ -56,7 +108,7 @@ class PriceHistory(Base):
     price: Mapped[float]
 
     recorded_at: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow
+        default=lambda: datetime.now(UTC),
     )
 
 
@@ -72,4 +124,3 @@ class Photo(Base):
     )
 
     path: Mapped[str]
-
