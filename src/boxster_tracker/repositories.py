@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from .models import Listing
+from .models import Listing, PriceHistory
 from .schemas import ListingData
 
 
@@ -72,5 +72,37 @@ class ListingRepository:
         return (
             query
             .order_by(Listing.id)
+            .all()
+        )
+
+    def add_price_history(
+        self,
+        listing_id: int,
+        price: float,
+    ):
+        record = PriceHistory(
+            listing_id=listing_id,
+            price=price,
+        )
+
+        self.session.add(record)
+        self.session.commit()
+        self.session.refresh(record)
+
+        return record
+
+    def get_price_history(
+        self,
+        listing_id: int,
+    ):
+        return (
+            self.session
+            .query(PriceHistory)
+            .filter(
+                PriceHistory.listing_id == listing_id
+            )
+            .order_by(
+                PriceHistory.recorded_at
+            )
             .all()
         )
