@@ -19,20 +19,20 @@ class AutoTraderScraper(ListingScraper):
         """
 
         with sync_playwright() as p:
-
             browser = p.chromium.launch(
                 headless=True
             )
 
-            page = browser.new_page()
+            try:
+                page = browser.new_page()
 
-            page.goto(
-                url,
-                wait_until="networkidle",
-            )
+                page.goto(
+                    url,
+                    wait_until="networkidle",
+                    timeout=30000,
+                )
 
-            html = page.content()
+                return page.content()
 
-            browser.close()
-
-        return html
+            finally:
+                browser.close()
