@@ -1,3 +1,8 @@
 # Python cache
 __pycache__/
 *.py[cod]
+# Local databases
+data/*.db
+
+# Local import data
+data/import/
