@@ -4,27 +4,48 @@ import re
 def extract_vehicle_state(
     html: str,
 ) -> dict:
+    """
+    Extract vehicle details embedded in AutoTrader page state.
+    """
 
-    data = {}
+    result = {
+        "mileage": None,
+        "transmission": None,
+    }
 
-    mileage = re.search(
-        r'"mileageInKmRaw":(\d+)',
+    if not html:
+        return result
+
+    mileage_match = re.search(
+        r'(\d{1,3}(?:,\d{3})*)\s*km',
         html,
+        re.IGNORECASE,
     )
 
-    if mileage:
-        data["mileage"] = int(
-            mileage.group(1)
+    if mileage_match:
+        result["mileage"] = int(
+            mileage_match.group(1).replace(",", "")
         )
 
-    transmission = re.search(
-        r'"gear":"([^"]+)"',
+    transmission_match = re.search(
+        r'"transmission(?:Type)?"\s*:\s*"([^"]+)"',
         html,
+        re.IGNORECASE,
     )
 
-    if transmission:
-        data["transmission"] = (
-            transmission.group(1)
+    if transmission_match:
+        value = transmission_match.group(1).strip()
+
+        transmission_map = {
+            "Manual": "M",
+            "Automatic": "A",
+            "Manual Transmission": "M",
+            "Automatic Transmission": "A",
+        }
+
+        result["transmission"] = transmission_map.get(
+            value,
+            value,
         )
 
-    return data
+    return result
