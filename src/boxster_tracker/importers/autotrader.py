@@ -1,24 +1,30 @@
-from boxster_tracker.schemas import ListingData
+from boxster_tracker.scrapers.autotrader import (
+    AutoTraderScraper,
+)
+from boxster_tracker.parsers.autotrader import (
+    AutoTraderParser,
+)
 
 
 class AutoTraderImporter:
     """
-    Converts AutoTrader URLs into listing records.
-
-    Detailed scraping comes later.
+    Import AutoTrader listings.
     """
 
     SOURCE = "autotrader"
 
+    def __init__(self):
+        self.scraper = AutoTraderScraper()
+        self.parser = AutoTraderParser()
+
     def import_url(
         self,
         url: str,
-    ) -> ListingData:
+    ):
 
-        return ListingData(
-            source=self.SOURCE,
-            url=url,
-            make="Porsche",
-            model="Boxster",
+        html = self.scraper.scrape(url)
+
+        return self.parser.parse(
+            html,
+            url,
         )
-

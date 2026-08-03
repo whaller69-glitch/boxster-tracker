@@ -1,18 +1,22 @@
 from playwright.sync_api import sync_playwright
 
-from boxster_tracker.schemas import ListingData
-
 from .base import ListingScraper
 
 
 class AutoTraderScraper(ListingScraper):
+    """
+    Capture AutoTrader listing HTML.
+    """
 
     SOURCE = "autotrader"
 
     def scrape(
         self,
         url: str,
-    ) -> ListingData:
+    ) -> str:
+        """
+        Return rendered HTML for parsing.
+        """
 
         with sync_playwright() as p:
 
@@ -27,13 +31,8 @@ class AutoTraderScraper(ListingScraper):
                 wait_until="networkidle",
             )
 
-            title = page.title()
+            html = page.content()
 
             browser.close()
 
-        return ListingData(
-            source=self.SOURCE,
-            url=url,
-            model="Boxster",
-        )
-
+        return html

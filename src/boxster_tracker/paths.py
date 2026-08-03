@@ -5,7 +5,9 @@ class AppPaths:
     """Application filesystem paths."""
 
     def __init__(self, config: dict):
-        self.root = Path(config["storage"]["root"])
+        self.root = Path(
+            config["storage"]["root"]
+        )
 
         self.photos = (
             self.root
@@ -17,7 +19,9 @@ class AppPaths:
             / config["directories"]["history"]
         )
 
-        output = Path(config["output"]["root"])
+        output = Path(
+            config["output"]["root"]
+        )
 
         self.reports = (
             output
@@ -28,20 +32,29 @@ class AppPaths:
             output
             / config["output"]["exports"]
         )
+
     @property
     def pages(self) -> Path:
+        """Stored captured HTML pages."""
         return self.root / "history" / "pages"
+
+    @property
     def database(self) -> Path:
+        """SQLite database location."""
         return self.root / "boxsters.db"
+
     def create(self) -> None:
-        """Create required directories."""
+        """Create required application directories."""
 
         for path in [
             self.root,
             self.photos,
             self.history,
+            self.pages,
             self.reports,
             self.exports,
         ]:
-            path.mkdir(parents=True, exist_ok=True)
-
+            path.mkdir(
+                parents=True,
+                exist_ok=True,
+            )

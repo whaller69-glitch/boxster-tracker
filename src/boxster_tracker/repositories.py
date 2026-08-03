@@ -6,22 +6,16 @@ from .schemas import ListingData
 
 class ListingRepository:
 
-    def __init__(self, session: Session):
+    def __init__(
+        self,
+        session: Session,
+    ):
         self.session = session
-
-    def all(self):
-       return (
-          self.session
-          .query(Listing)
-          .order_by(Listing.created_at.desc())
-          .all()
-      )
 
     def create(
         self,
         data: ListingData,
-    ) -> Listing:
-
+    ):
         listing = Listing(
             source=data.source,
             url=data.url,
@@ -30,10 +24,53 @@ class ListingRepository:
             model=data.model,
             price=data.price,
             mileage=data.mileage,
+            colour=data.colour,
+            transmission=data.transmission,
+            trim=data.trim,
+            seller=data.seller,
+            location=data.location,
+            captured_at=data.captured_at,
         )
 
         self.session.add(listing)
         self.session.commit()
+        self.session.refresh(listing)
 
         return listing
 
+    def get_all(self):
+        return (
+            self.session
+            .query(Listing)
+            .order_by(Listing.id)
+            .all()
+        )
+
+    def filter(
+        self,
+        year: int | None = None,
+        max_price: float | None = None,
+        max_mileage: int | None = None,
+    ):
+        query = self.session.query(Listing)
+
+        if year is not None:
+            query = query.filter(
+                Listing.year == year
+            )
+
+        if max_price is not None:
+            query = query.filter(
+                Listing.price <= max_price
+            )
+
+        if max_mileage is not None:
+            query = query.filter(
+                Listing.mileage <= max_mileage
+            )
+
+        return (
+            query
+            .order_by(Listing.id)
+            .all()
+        )
