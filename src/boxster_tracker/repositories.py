@@ -22,17 +22,69 @@ class ListingRepository:
             year=data.year,
             make=data.make,
             model=data.model,
+            trim=data.trim,
             price=data.price,
             mileage=data.mileage,
             colour=data.colour,
             transmission=data.transmission,
-            trim=data.trim,
             seller=data.seller,
             location=data.location,
             captured_at=data.captured_at,
         )
 
         self.session.add(listing)
+        self.session.commit()
+        self.session.refresh(listing)
+
+        return listing
+
+    def get(
+        self,
+        listing_id: int,
+    ):
+        return (
+            self.session
+            .query(Listing)
+            .filter(
+                Listing.id == listing_id
+            )
+            .first()
+        )
+
+    def get_by_url(
+        self,
+        url: str,
+    ):
+        return (
+            self.session
+            .query(Listing)
+            .filter(
+                Listing.url == url
+            )
+            .first()
+        )
+
+    def update(
+        self,
+        listing: Listing,
+        data: ListingData,
+    ):
+        listing.source = data.source
+        listing.url = data.url
+        listing.year = data.year
+        listing.make = data.make
+        listing.model = data.model
+        listing.trim = data.trim
+        listing.price = data.price
+        listing.mileage = data.mileage
+        listing.colour = data.colour
+        listing.transmission = data.transmission
+        listing.seller = data.seller
+        listing.location = data.location
+
+        if data.captured_at is not None:
+            listing.captured_at = data.captured_at
+
         self.session.commit()
         self.session.refresh(listing)
 
@@ -80,16 +132,16 @@ class ListingRepository:
         listing_id: int,
         price: float,
     ):
-        record = PriceHistory(
+        history = PriceHistory(
             listing_id=listing_id,
             price=price,
         )
 
-        self.session.add(record)
+        self.session.add(history)
         self.session.commit()
-        self.session.refresh(record)
+        self.session.refresh(history)
 
-        return record
+        return history
 
     def get_price_history(
         self,
@@ -102,7 +154,7 @@ class ListingRepository:
                 PriceHistory.listing_id == listing_id
             )
             .order_by(
-                PriceHistory.recorded_at
+                PriceHistory.recorded_at.asc()
             )
             .all()
         )

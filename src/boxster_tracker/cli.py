@@ -1,49 +1,37 @@
+import csv
+from pathlib import Path
+
 import typer
 
-from boxster_tracker import __version__
 from boxster_tracker.config import load_config
 from boxster_tracker.database import get_session
-from boxster_tracker.import_service import ImportService
+from boxster_tracker.importers.autotrader import AutoTraderImporter
 from boxster_tracker.paths import AppPaths
-from boxster_tracker.scrapers.capture import PageCapture
-from boxster_tracker.services import ListingService
+from boxster_tracker.services.listing import ListingService
+
+app = typer.Typer()
 
 
-app = typer.Typer(
-    name="boxster",
-    help="Porsche Boxster market tracking tool",
-)
+def get_service() -> ListingService:
+    config = load_config()
+
+    paths = AppPaths(config)
+    paths.create()
+
+    session = get_session(
+        paths.database
+    )
+
+    return ListingService(session)
 
 
 @app.command()
 def version():
-    """Show application version."""
-    typer.echo(__version__)
-
-
-@app.command()
-def init():
-    """Initialize Boxster Tracker workspace."""
-
-    config = load_config()
-    paths = AppPaths(config)
-
-    paths.create()
-
-    typer.echo("Boxster Tracker initialized")
-    typer.echo("")
-    typer.echo("Created:")
-    typer.echo(f"  {paths.root}")
-    typer.echo(f"  {paths.photos}")
-    typer.echo(f"  {paths.history}")
-    typer.echo(f"  {paths.reports}")
-    typer.echo(f"  {paths.exports}")
+    typer.echo("0.1.0")
 
 
 @app.command()
 def status():
-    """Show application status."""
-
     config = load_config()
 
     typer.echo("Configuration loaded")
@@ -52,81 +40,29 @@ def status():
     )
 
 
-@app.command()
+@app.command("import-url")
 def import_url(
     url: str,
 ):
-    """
-    Import a vehicle listing URL.
-    """
+    service = get_service()
 
-    config = load_config()
-    paths = AppPaths(config)
-
-    paths.create()
-
-    session = get_session(
-        paths.database
-    )
-
-    service = ImportService(session)
-
-    listing = service.import_autotrader_url(
-        url
-    )
+    listing = AutoTraderImporter().import_url(url)
+    record = service.add_listing(listing)
 
     typer.echo(
-        f"Imported listing #{listing.id}"
+        f"Imported listing #{record.id}"
     )
 
 
 @app.command()
-def capture_url(
-    url: str,
-):
-    """
-    Capture an AutoTrader page.
-    """
-
-    config = load_config()
-    paths = AppPaths(config)
-
-    paths.create()
-
-    capture = PageCapture(
-        paths.pages
-    )
-
-    output = capture.capture(
-        url,
-        "capture.html",
-    )
-
-    typer.echo(
-        f"Saved page: {output}"
-    )
-
-
-@app.command(name="list")
-def list_listings():
-    """
-    List all stored vehicle listings.
-    """
-
-    config = load_config()
-    paths = AppPaths(config)
-
-    session = get_session(
-        paths.database
-    )
-
-    service = ListingService(session)
+def list():
+    service = get_service()
 
     listings = service.get_all()
 
     if not listings:
         typer.echo("No listings found")
-        return
+        raise typer.Exit()
 
     for listing in listings:
         typer.echo(
@@ -140,32 +76,44 @@ def list_listings():
 
 
 @app.command()
-def search(
-    year: int | None = typer.Option(
-        None,
-        help="Filter by model year",
-    ),
-    max_price: float | None = typer.Option(
-        None,
-        help="Maximum price",
-    ),
-    max_mileage: int | None = typer.Option(
-        None,
-        help="Maximum mileage",
-    ),
+def show(
+    listing_id: int,
 ):
-    """
-    Search stored listings.
-    """
+    service = get_service()
 
-    config = load_config()
-    paths = AppPaths(config)
+    listing = service.get(listing_id)
 
-    session = get_session(
-        paths.database
+    if listing is None:
+        typer.echo("Listing not found")
+        raise typer.Exit(code=1)
+
+    typer.echo(f"ID:            {listing.id}")
+    typer.echo(f"Source:        {listing.source}")
+    typer.echo(f"Year:          {listing.year}")
+    typer.echo(f"Make:          {listing.make}")
+    typer.echo(f"Model:         {listing.model}")
+    typer.echo(f"Trim:          {listing.trim}")
+    typer.echo(f"Price:         {listing.price}")
+    typer.echo(f"Mileage:       {listing.mileage}")
+    typer.echo(
+        f"Transmission:  {listing.transmission}"
     )
+    typer.echo(f"Colour:        {listing.colour}")
+    typer.echo(f"Seller:        {listing.seller}")
+    typer.echo(f"Location:      {listing.location}")
+    typer.echo(
+        f"Captured:      {listing.captured_at}"
+    )
+    typer.echo(f"URL:           {listing.url}")
 
-    service = ListingService(session)
+
+@app.command()
+def search(
+    year: int | None = None,
+    max_price: float | None = None,
+    max_mileage: int | None = None,
+):
+    service = get_service()
 
     listings = service.search(
         year=year,
@@ -175,7 +123,7 @@ def search(
 
     if not listings:
         typer.echo("No matching listings")
-        return
+        raise typer.Exit()
 
     for listing in listings:
         typer.echo(
@@ -183,9 +131,93 @@ def search(
             f"{listing.year} "
             f"{listing.make} "
             f"{listing.model} "
-            f"${listing.price} "
-            f"{listing.mileage} km"
+            f"${listing.price}"
         )
+
+
+@app.command()
+def export():
+    config = load_config()
+
+    paths = AppPaths(config)
+    paths.create()
+
+    session = get_session(
+        paths.database
+    )
+
+    service = ListingService(session)
+    listings = service.get_all()
+
+    if not listings:
+        typer.echo("No listings found")
+        raise typer.Exit()
+
+    export_dir = Path("data/exports")
+    export_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    output_path = (
+        export_dir / "boxster-listings.csv"
+    )
+
+    fieldnames = [
+        "id",
+        "source",
+        "url",
+        "year",
+        "make",
+        "model",
+        "trim",
+        "price",
+        "mileage",
+        "colour",
+        "transmission",
+        "seller",
+        "location",
+        "captured_at",
+        "status",
+    ]
+
+    with output_path.open(
+        "w",
+        newline="",
+        encoding="utf-8",
+    ) as csv_file:
+        writer = csv.DictWriter(
+            csv_file,
+            fieldnames=fieldnames,
+        )
+
+        writer.writeheader()
+
+        for listing in listings:
+            writer.writerow(
+                {
+                    "id": listing.id,
+                    "source": listing.source,
+                    "url": listing.url,
+                    "year": listing.year,
+                    "make": listing.make,
+                    "model": listing.model,
+                    "trim": listing.trim,
+                    "price": listing.price,
+                    "mileage": listing.mileage,
+                    "colour": listing.colour,
+                    "transmission": listing.transmission,
+                    "seller": listing.seller,
+                    "location": listing.location,
+                    "captured_at": listing.captured_at,
+                    "status": listing.status,
+                }
+            )
+
+    typer.echo(
+        f"Exported {len(listings)} listings to "
+        f"{output_path}"
+    )
 
 
 if __name__ == "__main__":

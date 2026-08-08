@@ -1,8 +1,17 @@
 # Python cache
 __pycache__/
 *.py[cod]
+
 # Local databases
 data/*.db
 
+# Generated exports
+data/exports/
+
 # Local import data
 data/import/
+
+# Local captures and test artifacts
+page.html
+scrap-test.txt
+backup.sql

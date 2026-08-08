@@ -1,20 +1,39 @@
 import re
 
-from boxster_tracker.schemas import ListingData
 from boxster_tracker.normalization import normalize_transmission
-from .jsonld import extract_jsonld
+from boxster_tracker.schemas import ListingData
+
 from .autotrader_state import extract_vehicle_state
+from .jsonld import extract_jsonld
+
 
 def extract_year(value: str) -> int | None:
     match = re.search(
         r"\b(19|20)\d{2}\b",
-        value,
+        value or "",
     )
 
     if match:
         return int(match.group())
 
     return None
+
+
+def extract_price(value) -> float | None:
+    if value is None:
+        return None
+
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def clean_value(value: str | None) -> str | None:
+    if not value:
+        return None
+
+    return value.strip()
 
 
 class AutoTraderParser:
@@ -30,6 +49,7 @@ class AutoTraderParser:
 
         documents = extract_jsonld(html)
         state = extract_vehicle_state(html)
+
         product = None
 
         for doc in documents:
@@ -43,6 +63,16 @@ class AutoTraderParser:
                 url=url,
             )
 
+        brand = product.get(
+            "brand",
+            {},
+        )
+
+        offers = product.get(
+            "offers",
+            {},
+        )
+
         return ListingData(
             source="autotrader",
             url=url,
@@ -51,23 +81,18 @@ class AutoTraderParser:
                 product.get("name", "")
             ),
 
-            make=product.get(
-                "brand",
-                {},
-            ).get(
-                "name"
+            make=clean_value(
+                brand.get("name")
             ),
 
             model="Boxster",
 
-            price=product.get(
-                "offers",
-                {},
-            ).get(
-                "price"
+            price=extract_price(
+                offers.get("price")
             ),
-            colour=product.get(
-                "color"
+
+            colour=clean_value(
+                product.get("color")
             ),
 
             mileage=state.get(
